@@ -191,6 +191,7 @@ export default function LandingPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="flex flex-col items-center gap-4"
         >
+          {/* Sign In Button */}
           <motion.button
             onClick={signInWithGoogle}
             className="flex items-center gap-3 px-8 py-4 bg-white border border-[#E2E8F0] rounded-2xl text-sm font-medium text-[#1A1A1B] hover:shadow-glass hover:border-gray-300 transition-all duration-200"
@@ -207,6 +208,17 @@ export default function LandingPage() {
             <ArrowRight className="w-4 h-4" />
           </motion.button>
           <p className="text-xs text-label">Free to start • No credit card required</p>
+
+          {/* Go to Dashboard Button */}
+          <motion.button
+            onClick={() => router.push('/dashboard')}
+            className="flex items-center gap-2 px-6 py-3 text-emerald-600 text-sm font-medium hover:bg-emerald-50 rounded-xl transition-colors"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <ArrowRight className="w-4 h-4" />
+            Go to Dashboard
+          </motion.button>
         </motion.div>
       </div>
 
