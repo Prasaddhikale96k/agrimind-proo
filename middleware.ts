@@ -4,8 +4,14 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Never block auth routes
-  if (pathname.startsWith('/auth/') || pathname.startsWith('/api/')) {
+  // Never block auth routes, API routes, landing page, and dashboard
+  if (
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/landing') ||
+    pathname.startsWith('/dashboard') ||
+    pathname === '/'
+  ) {
     return NextResponse.next()
   }
 
@@ -13,14 +19,8 @@ export function middleware(request: NextRequest) {
     request.cookies.has('sb-access-token') ||
     request.cookies.toString().includes('sb-')
 
-  const isDashboardRoute = pathname.startsWith('/dashboard')
   const isOnboardingRoute = pathname.startsWith('/onboarding')
   const isSettingsRoute = pathname.startsWith('/settings')
-  const isLandingRoute = pathname === '/landing' || pathname === '/'
-
-  if (!hasAuthCookie && isDashboardRoute) {
-    return NextResponse.redirect(new URL('/landing', request.url))
-  }
 
   if (!hasAuthCookie && isOnboardingRoute) {
     return NextResponse.redirect(new URL('/landing', request.url))
