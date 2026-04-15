@@ -963,8 +963,8 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                   {[
                     data.plantInfo.family,
                     data.plantInfo.cropType,
-                    data.plantInfo.origin,
-                  ].map((tag) => (
+                    data.plantInfo.growingSeason,
+                  ].filter(Boolean).map((tag) => (
                     <span
                       key={tag}
                       style={{
