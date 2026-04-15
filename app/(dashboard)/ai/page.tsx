@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Send, Sparkles, ImagePlus, Bot, Zap, FileText, BarChart3, Droplets, Leaf, Loader2, X, CheckCircle, AlertTriangle, TrendingUp, CloudSun, Activity, TestTube, FlaskConical, Gauge, ChevronDown, ChevronUp, Search, Plus, Calendar, DollarSign } from 'lucide-react'
+import DiagnosisHero from './DiagnosisHero'
 
 type Message = {
   id: string
@@ -12,6 +13,7 @@ type Message = {
   timestamp: Date
   confidence?: number
   action?: { type: string; details: string }
+  image?: string | null
 }
 
 const quickActions = [
@@ -131,6 +133,7 @@ export default function AIPage() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [imageAnalysis, setImageAnalysis] = useState<string>('')
+  const [parsedAnalysis, setParsedAnalysis] = useState<any>(null)
   const [analyzingImage, setAnalyzingImage] = useState(false)
   const [executingAction, setExecutingAction] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -142,8 +145,7 @@ export default function AIPage() {
   async function sendMessage(text?: string) {
     const messageText = text || input
     const hasImage = !!imagePreview
-    const imageToSend = imagePreview
-
+    
     if ((!messageText.trim() && !hasImage) || loading) return
 
     const userMessage: Message = {
@@ -151,10 +153,16 @@ export default function AIPage() {
       role: 'user',
       content: hasImage && !messageText.trim() ? 'Analyze this image' : messageText,
       timestamp: new Date(),
+      image: hasImage ? imagePreview : null,
     }
     setMessages((prev) => [...prev, userMessage])
     setInput('')
-    if (hasImage) removeImage()
+    if (hasImage) {
+      setImageFile(null)
+      setImagePreview('')
+      setImageAnalysis('')
+      setParsedAnalysis(null)
+    }
     setLoading(true)
 
     try {
@@ -163,11 +171,11 @@ export default function AIPage() {
         content: m.content,
       }))
 
-      if (imageToSend) {
+      if (hasImage) {
         const res = await fetch('/api/ai/analyze-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: imageToSend, prompt: messageText || undefined }),
+          body: JSON.stringify({ image: userMessage.image, prompt: messageText || undefined }),
         })
         const data = await res.json()
 
@@ -235,6 +243,7 @@ export default function AIPage() {
 
     setAnalyzingImage(true)
     setImageAnalysis('')
+    setParsedAnalysis(null)
 
     try {
       const res = await fetch('/api/ai/analyze-image', {
@@ -243,8 +252,42 @@ export default function AIPage() {
         body: JSON.stringify({ image: imagePreview }),
       })
       const data = await res.json()
-      setImageAnalysis(data.analysis || 'Unable to analyze image.')
-      toast.success('Image analysis complete!')
+      
+      const rawAnalysis = data.analysis || 'Unable to analyze image.'
+      setImageAnalysis(rawAnalysis)
+      
+      try {
+        let cleanedJson = rawAnalysis.trim()
+        
+        // Remove markdown code blocks if present
+        if (cleanedJson.startsWith('```')) {
+          cleanedJson = cleanedJson.replace(/^```json?/, '').replace(/```$/, '')
+        }
+        cleanedJson = cleanedJson.trim()
+        
+        const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0])
+          console.log('✅ Parsed JSON keys:', Object.keys(parsed))
+          
+          // Accept any format with plantInfo, disease, or quickTips
+          if (!parsed.plantInfo && !parsed.disease && !parsed.quickTips) {
+            console.error('❌ Missing required fields in parsed data')
+            toast.error('Could not parse analysis results')
+            return
+          }
+          
+          setParsedAnalysis(parsed)
+          toast.success('Image analysis complete!')
+        } else {
+          console.error('No JSON found in response:', rawAnalysis.slice(0, 500))
+          toast.error('Could not parse analysis results')
+        }
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError)
+        console.error('Raw response:', rawAnalysis.slice(0, 1000))
+        toast.error('Analysis received but could not be parsed')
+      }
     } catch {
       toast.error('Failed to analyze image')
     } finally {
@@ -295,6 +338,7 @@ export default function AIPage() {
     setImageFile(null)
     setImagePreview('')
     setImageAnalysis('')
+    setParsedAnalysis(null)
   }
 
   function formatContent(content: string) {
@@ -355,6 +399,9 @@ export default function AIPage() {
                         )}
                       </div>
                     )}
+                    {msg.image && (
+                      <img src={msg.image} alt="Uploaded" className="w-full h-40 object-cover rounded-lg mb-2" />
+                    )}
                     <p className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatContent(msg.content) }} />
                     {msg.action && (
                       <motion.button
@@ -409,6 +456,15 @@ export default function AIPage() {
             {/* Input */}
             <div className="p-4 border-t border-gray-100">
               <div className="flex gap-3">
+                <label className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <ImagePlus className="w-4 h-4 text-gray-600" />
+                </label>
                 <input
                   type="text"
                   value={input}
@@ -429,281 +485,91 @@ export default function AIPage() {
                   {loading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Send className="w-4 h-4 text-white" />}
                 </motion.button>
               </div>
+              {imagePreview && (
+                <div className="mt-3 relative inline-block">
+                  <img src={imagePreview} alt="Preview" className="h-20 rounded-lg" />
+                  <button
+                    onClick={removeImage}
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3 text-white" />
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}
 
         {/* Image Analysis Tab - Professional Diagnostic Suite */}
         {activeTab === 'image' && (
-          <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-50/50 to-white overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-6 pb-32">
-              <div className="max-w-2xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="text-center">
-                  <h3 className="text-xl font-bold text-dark flex items-center justify-center gap-2">
-                    <Activity className="w-5 h-5 text-emerald-600" />
-                    Diagnosis Hero
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">AI-Powered Crop Disease & Health Analysis</p>
+          !parsedAnalysis ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8">
+              <div className="max-w-md w-full text-center">
+                <div className="w-24 h-24 mx-auto mb-6 bg-primary/10 rounded-full flex items-center justify-center">
+                  <ImagePlus className="w-12 h-12 text-primary" />
                 </div>
-
-                {/* Upload Area */}
+                <h3 className="text-2xl font-bold text-dark mb-3">Crop Disease Analysis</h3>
+                <p className="text-gray-500 mb-10">Upload a photo of your crop leaf, fruit, or plant to get AI-powered disease detection, nutrient analysis, and treatment recommendations.</p>
+                
                 {!imagePreview ? (
-                  <label className="block p-12 border-2 border-dashed border-gray-300 rounded-3xl text-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/50 transition-all group">
-                    <div className="relative">
-                      <ImagePlus className="w-16 h-16 text-gray-300 mx-auto mb-4 group-hover:text-emerald-500 transition-colors" />
-                      <div className="absolute inset-0 bg-emerald-100 opacity-0 group-hover:opacity-20 blur-2xl rounded-full transition-opacity" />
+                  <label className="block cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <div className="border-2 border-dashed border-gray-400 rounded-2xl p-16 cursor-pointer hover:border-green-600 hover:bg-green-50 transition-all">
+                      <ImagePlus className="w-20 h-20 mx-auto text-gray-500 mb-5" />
+                      <p className="text-xl font-semibold text-gray-700">Drop image here or click to upload</p>
+                      <p className="text-gray-500 mt-3">PNG, JPG up to 10MB</p>
                     </div>
-                    <p className="text-base font-medium text-gray-700">Drop leaf image or click to upload</p>
-                    <p className="text-xs text-gray-400 mt-2">Supports PNG, JPG up to 10MB</p>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                   </label>
                 ) : (
-                  <motion.div 
-                    className="relative rounded-3xl overflow-hidden border border-gray-200 shadow-lg"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    {/* Scanning Effect */}
-                    {analyzingImage && (
-                      <motion.div 
-                        className="absolute inset-0 bg-emerald-500/10 z-10"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                  <div className="space-y-6">
+                    <div className="relative rounded-2xl overflow-hidden shadow-lg">
+                      <img src={imagePreview} alt="Preview" className="w-full h-80 object-contain bg-gray-100" />
+                      <button
+                        onClick={removeImage}
+                        className="absolute top-3 right-3 p-3 bg-red-500 rounded-full hover:bg-red-600 transition-colors shadow-md"
                       >
-                        <motion.div 
-                          className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent shadow-[0_0_20px_rgba(16,185,129,0.8)]"
-                          animate={{ top: ['0%', '100%', '0%'] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                        />
-                      </motion.div>
-                    )}
-                    
-                    <img src={imagePreview} alt="Uploaded crop" className="w-full h-72 object-cover" />
-                    
-                    {/* Floating Tech Data Overlay */}
-                    {imageAnalysis && !analyzingImage && (
-                      <div className="absolute inset-0 pointer-events-none">
-                        <motion.div 
-                          className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                        >
-                          <span className="text-xs text-emerald-400 font-medium">Anthracnose: <span className="text-white font-bold">80%</span></span>
-                        </motion.div>
-                        <motion.div 
-                          className="absolute top-4 right-4 px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full"
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 }}
-                        >
-                          <span className="text-xs text-amber-400 font-medium">N-Level: <span className="text-white font-bold">Moderate</span></span>
-                        </motion.div>
-                      </div>
-                    )}
-                    
-                    <button
-                      onClick={removeImage}
-                      className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors shadow-md"
-                    >
-                      <X className="w-4 h-4 text-gray-600" />
-                    </button>
-                  </motion.div>
-                )}
-
-                {/* Analyze Button */}
-                {imagePreview && !analyzingImage && !imageAnalysis && (
-                  <motion.button
-                    onClick={analyzeImage}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-2xl font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02, boxShadow: '0 20px 40px rgba(16,185,129,0.3)' }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Sparkles className="w-5 h-5" />
-                    Start AI Diagnosis
-                  </motion.button>
-                )}
-
-                {/* Analyzing State */}
-                {analyzingImage && (
-                  <div className="flex flex-col items-center justify-center gap-4 py-10">
-                    <div className="relative">
-                      <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-                      <motion.div 
-                        className="absolute inset-0 rounded-full bg-emerald-400"
-                        animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
+                        <X className="w-5 h-5 text-white" />
+                      </button>
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-gray-700">AI is analyzing your crop...</p>
-                      <p className="text-xs text-gray-400 mt-1">Detecting diseases & nutrient levels</p>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={removeImage}
+                        className="flex-1 py-4 border-2 border-gray-400 text-gray-700 font-bold rounded-xl hover:bg-gray-100 transition-all text-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={analyzeImage}
+                        disabled={analyzingImage}
+                        className="flex-1 py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all disabled:bg-gray-400 flex items-center justify-center gap-3 text-lg shadow-lg"
+                      >
+                        {analyzingImage ? (
+                          <>
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <span>Analyzing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ImagePlus className="w-6 h-6" />
+                            <span>Analyze Image</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                  </div>
-                )}
-
-                {/* Results - Modular Cards */}
-                {imageAnalysis && (
-                  <div className="space-y-4">
-                    {/* Card 1: Immediate Health ID */}
-                    <AnalysisCard 
-                      icon={Activity}
-                      title="Immediate Health ID"
-                      iconColor="text-emerald-600"
-                      bgColor="bg-emerald-50"
-                      initiallyOpen={true}
-                    >
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Diagnosis</p>
-                            <p className="text-lg font-bold text-dark">Anthracnose</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs text-gray-500 uppercase tracking-wide">Severity</p>
-                            <p className="text-lg font-bold text-red-600">High</p>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">Confidence</span>
-                            <span className="text-sm font-bold text-emerald-600">92%</span>
-                          </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <motion.div 
-                              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: '92%' }}
-                              transition={{ duration: 0.8, delay: 0.2 }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </AnalysisCard>
-
-                    {/* Card 2: Nutritional Analysis */}
-                    <AnalysisCard 
-                      icon={FlaskConical}
-                      title="Nutritional Analysis"
-                      iconColor="text-amber-600"
-                      bgColor="bg-amber-50"
-                    >
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-3 gap-3">
-                          {['Nitrogen', 'Zinc', 'Potassium'].map((nutrient) => (
-                            <div key={nutrient} className="text-center p-3 bg-white rounded-xl border border-gray-100">
-                              <p className="text-xs text-gray-500">{nutrient}</p>
-                              <p className="text-sm font-bold text-dark">{nutrient === 'Zinc' ? 'Low' : 'Normal'}</p>
-                            </div>
-                          ))}
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-gray-500">Overall Health</span>
-                            <span className="text-sm font-bold text-amber-600">6/10</span>
-                          </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <motion.div 
-                              className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: '60%' }}
-                              transition={{ duration: 0.8, delay: 0.3 }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </AnalysisCard>
-
-                    {/* Card 3: Recommended Action */}
-                    <AnalysisCard 
-                      icon={TestTube}
-                      title="Recommended Action"
-                      iconColor="text-blue-600"
-                      bgColor="bg-blue-50"
-                    >
-                      <div className="space-y-4">
-                        <div className="p-3 bg-white rounded-lg border border-gray-100">
-                          <p className="text-xs text-gray-500 mb-1">Fungicide</p>
-                          <p className="text-sm font-medium text-dark">Azoxystrobin 25% SC</p>
-                        </div>
-                        <div className="p-3 bg-white rounded-lg border border-gray-100">
-                          <p className="text-xs text-gray-500 mb-1">Fertilizer</p>
-                          <p className="text-sm font-medium text-dark">Zinc Sulfate 21%</p>
-                        </div>
-                        <div className="p-3 bg-white rounded-lg border border-gray-100">
-                          <p className="text-xs text-gray-500 mb-1">Treatment Schedule</p>
-                          <p className="text-sm font-medium text-dark">Apply every 7 days for 3 weeks</p>
-                        </div>
-                        <div className="flex gap-2 pt-2">
-                          <motion.button 
-                            className="flex-1 py-2.5 bg-emerald-500 text-white text-sm font-medium rounded-xl flex items-center justify-center gap-2"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <DollarSign className="w-4 h-4" />
-                            ₹250/acre
-                          </motion.button>
-                          <motion.button 
-                            className="flex-1 py-2.5 bg-white border border-gray-200 text-dark text-sm font-medium rounded-xl flex items-center justify-center gap-2"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <Calendar className="w-4 h-4" />
-                            Schedule
-                          </motion.button>
-                        </div>
-                      </div>
-                    </AnalysisCard>
-
-                    {/* Analyze Another Button */}
-                    <motion.button
-                      onClick={() => { setImageFile(null); setImagePreview(''); setImageAnalysis('') }}
-                      className="w-full py-3 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                    >
-                      Analyze Another Image
-                    </motion.button>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Image Input Bar */}
-            <div className="p-4 border-t border-gray-100 bg-white/80 backdrop-blur-md flex-shrink-0">
-              <div className="flex gap-3">
-                <label className="p-3 bg-emerald-500 hover:bg-emerald-600 rounded-xl cursor-pointer transition-colors shadow-lg shadow-emerald-500/20">
-                  <ImagePlus className="w-4 h-4 text-white" />
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                </label>
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Ask a question about this image..."
-                  style={{ color: '#000000' }}
-                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all caret-emerald-600 selection:bg-emerald-100 selection:text-emerald-900 shadow-sm"
-                  disabled={loading}
-                />
-                <motion.button
-                  className="p-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl transition-all shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if (imagePreview) {
-                      analyzeImage()
-                    } else if (input.trim()) {
-                      sendMessage()
-                    }
-                  }}
-                  disabled={loading || (!imagePreview && !input.trim())}
-                >
-                  {analyzingImage || loading ? <Loader2 className="w-4 h-4 text-white animate-spin" /> : <Sparkles className="w-4 h-4 text-white" />}
-                </motion.button>
-              </div>
+          ) : (
+            <div className="flex-1 overflow-auto p-4">
+              <DiagnosisHero analysisData={parsedAnalysis} />
             </div>
-          </div>
+          )
         )}
 
         {/* AI Actions Tab */}

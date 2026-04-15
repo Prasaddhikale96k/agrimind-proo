@@ -1,16 +1,19 @@
-export type Farmer = {
+export type Profile = {
   id: string
-  name: string
+  full_name: string
   email: string
   phone: string | null
   avatar_url: string | null
   location: string | null
-  total_land_acres: number | null
   farming_experience_years: number | null
+  total_land_acres: number | null
   subscription_plan: string
   created_at: string
   updated_at: string
 }
+
+// Keep Farmer for backwards compatibility
+export type Farmer = Profile
 
 export type Farm = {
   id: string

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import {
@@ -17,26 +17,28 @@ import {
   Loader2,
 } from 'lucide-react'
 
-type Farmer = {
+type Profile = {
   id: string
-  name: string
+  full_name: string
   email: string
   phone: string | null
   location: string | null
-  total_land_acres: number | null
   farming_experience_years: number | null
+  total_land_acres: number | null
 }
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const supabase = createClient()
+
   const [activeTab, setActiveTab] = useState('profile')
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [farmerData, setFarmerData] = useState<Farmer | null>(null)
+  const [profileData, setProfileData] = useState<Profile | null>(null)
 
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     phone: '',
     location: '',
     experience: '',
@@ -45,24 +47,26 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) {
-      loadFarmerData()
+      loadProfileData()
     }
   }, [user])
 
-  async function loadFarmerData() {
+  async function loadProfileData() {
+    if (!user) return
+
     try {
       const { data, error } = await supabase
-        .from('farmers')
+        .from('profiles')
         .select('*')
-        .eq('email', user?.email)
+        .eq('id', user.id)
         .single()
 
       if (error) throw error
 
       if (data) {
-        setFarmerData(data)
+        setProfileData(data)
         setFormData({
-          name: data.name || '',
+          fullName: data.full_name || '',
           phone: data.phone || '',
           location: data.location || '',
           experience: data.farming_experience_years?.toString() || '',
@@ -70,37 +74,50 @@ export default function SettingsPage() {
         })
       }
     } catch (error) {
-      console.error('Error loading farmer data:', error)
+      console.error('Error loading profile data:', error)
+      // Profile might not exist yet, use defaults
+      setFormData({
+        fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+        phone: '',
+        location: '',
+        experience: '',
+        totalLand: '',
+      })
     } finally {
       setLoading(false)
     }
   }
 
   const handleSave = async () => {
-    if (!farmerData) return
+    if (!user) return
 
     setSaving(true)
     try {
+      // Upsert profile (create if doesn't exist, update if does)
       const { error } = await supabase
-        .from('farmers')
-        .update({
-          name: formData.name.trim(),
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          full_name: formData.fullName.trim(),
           phone: formData.phone.trim(),
           location: formData.location.trim(),
           farming_experience_years: formData.experience ? parseInt(formData.experience) : null,
           total_land_acres: formData.totalLand ? parseFloat(formData.totalLand) : null,
           updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
         })
-        .eq('id', farmerData.id)
 
       if (error) throw error
 
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-      toast.success('Settings saved successfully!')
-    } catch (error) {
-      console.error('Error saving settings:', error)
-      toast.error('Failed to save settings')
+      toast.success('Profile saved successfully!')
+      loadProfileData() // Reload to get updated data
+    } catch (error: unknown) {
+      console.error('Error saving profile:', error)
+      toast.error(`Failed to save profile: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setSaving(false)
     }
@@ -141,11 +158,10 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === tab.id
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id
                         ? 'bg-green-50 text-green-700'
                         : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
@@ -171,9 +187,10 @@ export default function SettingsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                       <input
                         type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                        placeholder="Rajesh Kumar"
                       />
                     </div>
                     <div>
@@ -213,11 +230,11 @@ export default function SettingsPage() {
                         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                       >
                         <option value="">Select experience</option>
-                        <option value="0-1">Less than 1 year</option>
-                        <option value="1-3">1-3 years</option>
-                        <option value="3-5">3-5 years</option>
-                        <option value="5-10">5-10 years</option>
-                        <option value="10+">10+ years</option>
+                        <option value="1">Less than 1 year</option>
+                        <option value="2">1-3 years</option>
+                        <option value="4">3-5 years</option>
+                        <option value="7">5-10 years</option>
+                        <option value="10">10+ years</option>
                       </select>
                     </div>
                     <div>

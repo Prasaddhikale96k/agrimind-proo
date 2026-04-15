@@ -13,7 +13,7 @@ export function initEmailJS() {
 // Fetch Weather Data from OpenWeatherMap
 export async function fetchWeatherData(location: string = 'Nashik,IN') {
   try {
-    const WEATHER_API_KEY = 'df1a9b4cb1050c130817ebc84aa2e2aa'
+    const WEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'df1a9b4cb1050c130817ebc84aa2e2aa'
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${WEATHER_API_KEY}&units=metric`
     )

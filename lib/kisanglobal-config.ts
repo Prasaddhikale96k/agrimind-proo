@@ -1,14 +1,12 @@
 // KisanGlobal API Configuration
-// WARNING: Never commit this file to version control
+// All API keys are loaded from .env.local - never commit this file!
 export const API_KEYS = {
-  DATA_GOV_IN: "datagov-579b464db66ec23bdd0000018a4ae19df92248826b8d31c51485f3f8",
-  // Using existing Groq API key from .env.local
-  GROQ: process.env.GROQ_API_KEY || "",
-  OPENWEATHER: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || "df1a9b4cb1050c130817ebc84aa2e2aa",
-  EXCHANGE_RATE: "2b01a47ebfe41316f60468f5",
-  EMAILJS_SERVICE_ID: "service_uezxlwj",
-  EMAILJS_TEMPLATE_ID: "template_yvdf3u6",
-  EMAILJS_PUBLIC_KEY: "ARR6NkUyhnvERfZ-U",
+  DATA_GOV_IN: process.env.NEXT_PUBLIC_DATAGOV_API_KEY || "",
+  OPENWEATHER: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || "",
+  EXCHANGE_RATE: process.env.NEXT_PUBLIC_EXCHANGE_RATE_API_KEY || "",
+  EMAILJS_SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "",
+  EMAILJS_TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "",
+  EMAILJS_PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "",
 };
 
 // Fallback prices if API fails (₹/kg)

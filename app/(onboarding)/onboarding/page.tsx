@@ -146,27 +146,19 @@ export default function OnboardingPage() {
         return
       }
 
-      const { error: farmerError } = await supabase.from('farmers').upsert({
-        id: user.id,
-        name: formData.name.trim(),
-        email: user.email,
+      // Create or update profile
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: user.id,  // Use auth user ID
+        full_name: formData.name.trim(),
+        email: user.email,  // Use authenticated email
         phone: formData.phone.trim(),
         location: formData.location.trim(),
-        farming_experience_years: parseInt(formData.experience.split('-')[0]) || 1,
-        avatar_url: user.user_metadata?.avatar_url || null,
-        subscription_plan: 'free',
+        farming_experience: formData.experience,
+        total_land: parseFloat(formData.area),
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' })
+      }, { onConflict: 'id', ignoreDuplicates: false })
 
-      if (farmerError) throw farmerError
-
-      const { data: farmerData } = await supabase
-        .from('farmers')
-        .select('id')
-        .eq('email', user.email)
-        .single()
-
-      if (!farmerData) throw new Error('Could not find farmer record after upsert')
+      if (profileError) throw profileError
 
       const areaAcres = parseFloat(formData.area)
       const areaSqM = Math.round(areaAcres * 4046.86)
@@ -174,10 +166,9 @@ export default function OnboardingPage() {
       const { data: farmData, error: farmError } = await supabase
         .from('farms')
         .insert({
-          farmer_id: farmerData.id,
-          name: formData.farmName.trim(),
+          user_id: user.id,
+          farm_name: formData.farmName.trim(),
           plot_id: formData.plotId.toUpperCase(),
-          area_sqm: areaSqM,
           area_acres: areaAcres,
           soil_type: formData.soilType,
           water_source: formData.waterSource,
@@ -191,14 +182,14 @@ export default function OnboardingPage() {
       harvestDate.setMonth(harvestDate.getMonth() + 4)
 
       const { error: cropError } = await supabase.from('crops').insert({
+        user_id: user.id,
         farm_id: farmData.id,
-        name: formData.cropName.trim(),
+        crop_name: formData.cropName.trim(),
         crop_type: formData.cropType.toLowerCase(),
         variety: formData.variety.trim() || null,
         sowing_date: formData.sowingDate,
         expected_harvest_date: harvestDate.toISOString().split('T')[0],
         growth_stage: formData.growthStage,
-        status: 'growing',
         health_index: 75,
       })
 

@@ -26,57 +26,41 @@ export async function POST(req: Request) {
       mimeType = 'image/jpeg'
     }
 
-    const defaultPrompt = `You are an expert plant pathologist, agronomist, and crop disease specialist with 20+ years of experience in Indian agriculture. Provide a COMPREHENSIVE and DETAILED analysis of this crop image.
+    const defaultPrompt = `You are an expert plant pathologist. Analyze this crop image and provide a detailed agricultural report in JSON format:
 
-## 1. CROP IDENTIFICATION
-- Crop name and variety/species
-- Growth stage (seedling, vegetative, flowering, fruiting, mature)
-- Overall plant morphology and development
+{
+  "plantInfo": {
+    "commonName": "crop name",
+    "scientificName": "botanical name",
+    "family": "plant family",
+    "cropType": "type of crop",
+    "growthStage": "current growth stage",
+    "emoji": "one emoji",
+    "growingSeason": "best months"
+  },
+  "disease": {
+    "detected": true,
+    "name": "disease name if any",
+    "confidence": 85,
+    "severity": "Medium",
+    "description": "2-3 sentences about the disease",
+    "symptoms": ["symptom 1", "symptom 2", "symptom 3"],
+    "causes": ["cause 1", "cause 2"],
+    "treatment": {
+      "product": "recommended fungicide/insecticide",
+      "dosage": "how to apply",
+      "frequency": "how often"
+    }
+  },
+  "nutritional": {
+    "overallHealth": 7,
+    "deficiencies": ["nutrient 1 if any"],
+    "recommendations": ["fertilizer recommendation"]
+  },
+  "quickTips": ["tip 1", "tip 2", "tip 3"]
+}
 
-## 2. DISEASE & PEST DETECTION
-- Identify any visible diseases (fungal, bacterial, viral) with confidence percentage
-- Identify any pest damage (insects, mites, nematodes)
-- Describe specific symptoms visible (spots, wilting, discoloration, lesions, etc.)
-- Rate severity: Mild / Moderate / Severe / Critical
-
-## 3. NUTRIENT STATUS ANALYSIS
-- Nitrogen (N) deficiency or excess symptoms
-- Phosphorus (P) deficiency or excess symptoms
-- Potassium (K) deficiency or excess symptoms
-- Micronutrient deficiencies (Iron, Zinc, Magnesium, Calcium, etc.)
-- Visual indicators observed in leaves, stems, and overall plant
-
-## 4. OVERALL HEALTH ASSESSMENT
-- Health rating out of 10 with justification
-- Vigor and growth quality
-- Stress indicators (water stress, heat stress, etc.)
-
-## 5. TREATMENT PLAN (Detailed)
-- Immediate actions to take (within 24-48 hours)
-- Short-term treatment (1-2 weeks)
-- Long-term management strategy
-- Specific product/chemical names available in India
-- Exact dosages and application methods
-- Application timing and frequency
-
-## 6. ESTIMATED COST
-- Treatment cost per acre in Indian Rupees (₹)
-- Breakdown by product/chemical
-- Cost-benefit analysis
-
-## 7. PREVENTION STRATEGY
-- Crop rotation recommendations
-- Soil management practices
-- Irrigation adjustments
-- Seasonal precautions
-- Resistant variety suggestions
-
-## 8. WEATHER-BASED RECOMMENDATIONS
-- How current weather conditions affect this issue
-- Best timing for treatment based on weather
-- Precautionary measures for upcoming weather patterns
-
-Be extremely thorough and detailed. Reference Indian agricultural practices, locally available products, and Nashik-region specific advice where applicable. Use specific numbers, dosages, and timelines.`
+Return ONLY valid JSON, no markdown.`
 
     let analysis = ''
     let modelUsed = ''
