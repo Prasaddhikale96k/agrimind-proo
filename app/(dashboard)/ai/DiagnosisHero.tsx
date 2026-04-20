@@ -517,6 +517,8 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
           iron: { status: 'Normal', value: 4, unit: 'ppm' },
           calcium: { status: 'Normal', value: 60, unit: 'kg/ha' },
           overallHealth: aiData.nutritional?.overallHealth || 7,
+          soilPH: aiData.soil?.ph || 6.5,
+          moistureLevel: aiData.soil?.moisture || 'Normal',
           deficiencies: aiData.nutritional?.deficiencies || [],
           recommendations: aiData.nutritional?.recommendations || [],
         },
@@ -1168,7 +1170,7 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                 >
                   <span>🔬</span> Visible Symptoms
                 </div>
-                {data.disease.symptoms.map((symptom, i) => (
+                {data.disease.symptoms.map((symptom: string, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1221,7 +1223,7 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                   <span>⚡</span> Root Causes
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {data.disease.causes.map((cause, i) => (
+                  {data.disease.causes.map((cause: string, i: number) => (
                     <span
                       key={i}
                       style={{
@@ -1315,7 +1317,7 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                   <span style={{ fontSize: "24px", color: "#a7f3d0" }}>/10</span>
                 </div>
                 <div style={{ fontSize: "13px", color: "#6ee7b7", marginTop: "8px" }}>
-                  Needs Attention • Soil pH: {data.nutritional.soilPH}
+                  Needs Attention • Soil pH: {(data.nutritional as any).soilPH || 6.5}
                 </div>
                 <div
                   style={{
@@ -1635,7 +1637,7 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                 >
                   <span>🌿</span> Fertilizer Schedule
                 </div>
-                {data.treatment.fertilizer.map((fert, i) => (
+                {data.treatment.fertilizer.map((fert: any, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -1712,7 +1714,7 @@ export default function DiagnosisHero({ analysisData }: DiagnosisHeroProps) {
                 >
                   <span>👨‍🌾</span> Cultural Practices
                 </div>
-                {data.treatment.cultural.map((practice, i) => (
+                {data.treatment.cultural.map((practice: any, i: number) => (
                   <div
                     key={i}
                     style={{

@@ -49,7 +49,8 @@ const PRIVATE_BUYERS = [
   { name: 'Kisan Mill Processing', type: 'mill', premium: 1.0, rating: 4.0, verified: true, distance: 60, phone: '+91-9876543214' },
 ]
 
-const KNOWN_COORDS: Record<string, { lat: number; lng: number }> = {
+const KNOWN_COORDS: Record<string, { lat: number; lng: number; placeId?: string }> = {
+  kalyan: { lat: 19.24, lng: 73.13, placeId: 'ChIJgVl9W2C75zsROM0D_D78tM8' },
   nashik: { lat: 19.9975, lng: 73.7898 }, pune: { lat: 18.5204, lng: 73.8567 },
   mumbai: { lat: 19.076, lng: 72.8777 }, delhi: { lat: 28.7233, lng: 77.1824 },
   ahmedabad: { lat: 23.0225, lng: 72.5714 }, bangalore: { lat: 12.9716, lng: 77.5946 },
@@ -131,6 +132,7 @@ export async function POST(req: Request) {
         const coordsEntry = Object.entries(KNOWN_COORDS).find(([k]) => key.includes(k))
         const lat = coordsEntry?.[1].lat || farmerLat + (Math.random() - 0.5) * 3
         const lng = coordsEntry?.[1].lng || farmerLng + (Math.random() - 0.5) * 3
+        const placeId = coordsEntry?.[1].placeId || undefined;
 
         const dist = haversineDistance(farmerLat, farmerLng, lat, lng)
         if (dist > maxDist * 3) continue
@@ -149,7 +151,7 @@ export async function POST(req: Request) {
           buyer_type: 'mandi',
           buyer_name: m.market,
           buyer_location: `${m.market}, ${farmerState}`,
-          buyer_lat: lat, buyer_lng: lng,
+          buyer_lat: lat, buyer_lng: lng, buyer_place_id: placeId,
           buyer_district: farmerDistrict,
           buyer_rating: 3.5 + Math.random() * 1.3,
           buyer_verified: true,
@@ -201,7 +203,7 @@ export async function POST(req: Request) {
         deals.push({
           buyer_type: 'mandi', buyer_name: m.name,
           buyer_location: `${m.district}, ${m.state}`,
-          buyer_lat: m.lat, buyer_lng: m.lng,
+          buyer_lat: m.lat, buyer_lng: m.lng, buyer_place_id: undefined,
           buyer_district: m.district, buyer_rating: m.rating,
           buyer_verified: true, buyer_phone: '+91-XXXXXXXXXX',
           distance_km: Math.round(dist * 100) / 100,
@@ -248,6 +250,7 @@ export async function POST(req: Request) {
         buyer_location: `${farmerDistrict}, ${farmerState}`,
         buyer_lat: farmerLat + (Math.random() - 0.5) * 0.5,
         buyer_lng: farmerLng + (Math.random() - 0.5) * 0.5,
+        buyer_place_id: undefined,
         buyer_district: farmerDistrict,
         buyer_rating: buyer.rating,
         buyer_verified: buyer.verified,

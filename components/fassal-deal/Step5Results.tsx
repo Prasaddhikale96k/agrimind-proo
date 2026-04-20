@@ -34,9 +34,10 @@ interface DealCardProps {
   avgPrice: number
   quantity: number
   onSaveSuccess: () => void
+  location: any
 }
 
-function DealCard({ deal, index, avgPrice, quantity, onSaveSuccess }: DealCardProps) {
+function DealCard({ deal, index, avgPrice, quantity, location, onSaveSuccess }: DealCardProps) {
   const distance = safeNum(deal.distance_km)
   const pricePerQuintal = safeNum(deal.price_per_quintal) || safeNum(deal.mandi_price)
   const grossAmount = safeNum(deal.gross_amount) || safeNum(deal.total_gross_amount) || pricePerQuintal * quantity
@@ -89,6 +90,33 @@ function DealCard({ deal, index, avgPrice, quantity, onSaveSuccess }: DealCardPr
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleDirections = () => {
+    const lat = deal.latitude || deal.buyer_lat || 0;
+    const lng = deal.longitude || deal.buyer_lng || 0;
+    
+    let originParam = '';
+    if (location && location.lat && location.lng) {
+      originParam = `&origin=${location.lat},${location.lng}`;
+    }
+    
+    let url = '';
+    const placeId = deal.buyer_place_id;
+    const marketName = encodeURIComponent(deal.buyer_name || 'Market');
+    const marketLocation = deal.buyer_location ? encodeURIComponent(deal.buyer_location) : '';
+    const fullDestination = marketLocation ? `${marketName}, ${marketLocation}` : marketName;
+
+    if (placeId) {
+      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${fullDestination}&destination_place_id=${placeId}`;
+    } else if (lat && lng) {
+      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${lat},${lng}&destination=${fullDestination}`;
+    } else {
+      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${fullDestination}`;
+    }
+    
+    console.log("Generated Maps URL:", url);
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   return (
@@ -253,14 +281,12 @@ function DealCard({ deal, index, avgPrice, quantity, onSaveSuccess }: DealCardPr
             <Bookmark className={`w-4 h-4 ${saved ? 'fill-green-600 text-green-600' : ''}`} />
             {saving ? 'Saving...' : saved ? 'Saved' : 'Save'}
           </button>
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${deal.buyer_lat || 0},${deal.buyer_lng || 0}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={handleDirections}
             className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
           >
             <Navigation className="w-4 h-4" /> Directions
-          </a>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -370,6 +396,7 @@ export default function Step5Results({ deals, aiAnalysis, crop, quantity, locati
             index={i}
             avgPrice={avgPrice}
             quantity={quantity}
+            location={location}
             onSaveSuccess={onSaveSuccess}
           />
         ))}

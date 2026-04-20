@@ -596,3 +596,20 @@ CREATE POLICY "Allow all access" ON alerts FOR ALL USING (true);
 CREATE POLICY "Allow all access" ON equipment FOR ALL USING (true);
 CREATE POLICY "Allow all access" ON ai_interactions FOR ALL USING (true);
 CREATE POLICY "Allow all access" ON plot_analytics FOR ALL USING (true);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- TABLE: ai_schedules (for saving generated spray schedules)
+-- ═══════════════════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS ai_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  crop_id VARCHAR(100) NOT NULL,
+  crop_name VARCHAR(200),
+  schedule_data JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, crop_id)
+);
+
+ALTER TABLE ai_schedules ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all access" ON ai_schedules FOR ALL USING (true);

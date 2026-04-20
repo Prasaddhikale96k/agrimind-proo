@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { createClient } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import {
@@ -29,7 +29,6 @@ type Profile = {
 
 export default function SettingsPage() {
   const { user } = useAuth()
-  const supabase = createClient()
 
   const [activeTab, setActiveTab] = useState('profile')
   const [saved, setSaved] = useState(false)

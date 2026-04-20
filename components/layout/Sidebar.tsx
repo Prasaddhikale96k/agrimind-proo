@@ -20,6 +20,7 @@ import {
   Wheat,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 type NavItem = {
   label: string
@@ -131,6 +132,10 @@ export default function Sidebar() {
             <span>Settings</span>
           </motion.div>
         </Link>
+      </div>
+
+      <div className="px-3 pb-2 flex justify-center">
+        <LanguageSwitcher />
       </div>
 
       {/* User Profile */}

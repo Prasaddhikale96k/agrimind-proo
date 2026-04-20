@@ -37,23 +37,35 @@ export default function CropDetailPage() {
 
   async function loadData() {
     try {
-      const [cropRes, farmRes, soilRes, irrRes, sprayRes, fertRes, finRes] = await Promise.all([
-        supabase.from('crops').select('*').eq('id', cropId).single(),
-        supabase.from('farms').select('*').eq('id', cropId).single(),
-        supabase.from('soil_data').select('*').order('recorded_at', { ascending: false }).limit(14),
-        supabase.from('irrigation_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10),
-        supabase.from('spray_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10),
-        supabase.from('fertilization_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10),
-        supabase.from('financial_records').select('*').eq('crop_id', cropId).order('record_date', { ascending: false }).limit(20),
-      ])
+      const cropRes = await supabase.from('crops').select('*').eq('id', cropId).single()
+      const farmRes = await supabase.from('farms').select('*').eq('id', cropId).single()
+      const soilRes = await supabase.from('soil_data').select('*').order('recorded_at', { ascending: false }).limit(14)
+      const irrRes = await supabase.from('irrigation_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10)
+      const sprayRes = await supabase.from('spray_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10)
+      const fertRes = await supabase.from('fertilization_schedules').select('*').eq('crop_id', cropId).order('scheduled_date', { ascending: false }).limit(10)
+      const finRes = await supabase.from('financial_records').select('*').eq('crop_id', cropId).order('record_date', { ascending: false }).limit(20)
 
-      if (cropRes.data) setCrop(cropRes.data)
-      if (farmRes.data) setFarm(farmRes.data)
-      if (soilRes.data) setSoilData(soilRes.data)
-      if (irrRes.data) setIrrigations(irrRes.data)
-      if (sprayRes.data) setSprays(sprayRes.data)
-      if (fertRes.data) setFertilizations(fertRes.data)
-      if (finRes.data) setFinancials(finRes.data)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cropData = cropRes.data as any
+      if (cropData?.id) setCrop(cropData as Crop)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const farmData = farmRes.data as any
+      if (farmData?.id) setFarm(farmData as Farm)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const soilData = soilRes.data as any
+      if (soilData) setSoilData(soilData as SoilData[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const irrData = irrRes.data as any
+      if (irrData) setIrrigations(irrData as IrrigationSchedule[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sprayData = sprayRes.data as any
+      if (sprayData) setSprays(sprayData as SpraySchedule[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fertData = fertRes.data as any
+      if (fertData) setFertilizations(fertData as FertilizationSchedule[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const finData = finRes.data as any
+      if (finData) setFinancials(finData as FinancialRecord[])
     } catch (error) {
       console.error('Error loading crop detail:', error)
     } finally {

@@ -18,7 +18,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-client'
+import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth-context'
 import { SkeletonCard, EmptyState } from '@/components/shared/LoadingSkeleton'
 import type { Crop, Farm } from '@/types'
@@ -36,7 +36,6 @@ const cardVariants = {
 
 export default function CropsPage() {
   const { user } = useAuth()
-  const supabase = createClient()
 
   const [crops, setCrops] = useState<Crop[]>([])
   const [farms, setFarms] = useState<Farm[]>([])
@@ -198,14 +197,24 @@ export default function CropsPage() {
       </div>
 
       {/* Empty State */}
-      {crops.length === 0 && !loading && (
-        <EmptyState
-          icon="crops"
-          title="No crops added yet"
-          description="Start tracking your crops to get AI-powered insights and monitor their growth."
-          actionLabel="Add Your First Crop"
-          onAction={() => setShowModal(true)}
-        />
+      {(crops.length === 0 && !loading) && (
+        farms.length === 0 ? (
+          <EmptyState
+            icon="crops"
+            title="No farms or crops yet"
+            description="Get started by setting up your first farm and adding crops to see your dashboard come to life."
+            actionLabel="Add Your First Farm"
+            onAction={() => window.location.href = '/onboarding'}
+          />
+        ) : (
+          <EmptyState
+            icon="crops"
+            title="No crops added yet"
+            description="Start tracking your crops to get AI-powered insights and monitor their growth."
+            actionLabel="Add Your First Crop"
+            onAction={() => setShowModal(true)}
+          />
+        )
       )}
 
       {/* Crop Cards Grid */}
@@ -372,8 +381,8 @@ function AddCropModal({
   onAdded: () => void
 }) {
   const { user } = useAuth()
-  const supabase = createClient()
   const [submitting, setSubmitting] = useState(false)
+  const [selectedFarmId, setSelectedFarmId] = useState(farms[0]?.id || '')
   const [formData, setFormData] = useState({
     name: '',
     variety: '',
@@ -387,6 +396,12 @@ function AddCropModal({
     market_price_per_kg: '',
     farm_id: farms[0]?.id || '',
   })
+
+  // Update farm_id when dropdown changes
+  const handleFarmChange = (farmId: string) => {
+    setSelectedFarmId(farmId)
+    setFormData({ ...formData, farm_id: farmId })
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -465,6 +480,24 @@ function AddCropModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Plot/Plot Selector */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Select Plot *</label>
+            <select
+              required
+              className="select-field"
+              value={selectedFarmId}
+              onChange={(e) => handleFarmChange(e.target.value)}
+            >
+              <option value="">Choose a plot...</option>
+              {farms.map((farm) => (
+                <option key={farm.id} value={farm.id}>
+                  {farm.name} ({farm.plot_id || 'Plot'})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Crop Name *</label>

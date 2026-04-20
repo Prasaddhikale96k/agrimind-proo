@@ -2,13 +2,12 @@
 // This fetches real mandi prices from data.gov.in (Agmarknet official API)
 // and saves them to Supabase mandi_prices table
 
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 const AGMARKNET_API_KEY = process.env.AGMARKNET_API_KEY || ''
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = supabaseAdmin
 
 const CROPS = [
   'Tomato', 'Onion', 'Potato', 'Wheat', 'Paddy', 'Rice', 'Maize',

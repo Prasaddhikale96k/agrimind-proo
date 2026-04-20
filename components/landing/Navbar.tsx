@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Leaf, Menu, X } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
 
 const navLinks = [
   { label: 'Features', href: '#features' },
@@ -18,15 +17,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('')
-  const { user, signInWithGoogle, signOut } = useAuth()
-  const router = useRouter()
+  const { signInWithGoogle } = useAuth()
   const lastScrollY = useRef(0)
   const [hideOnScroll, setHideOnScroll] = useState(false)
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
 
   useEffect(() => {
     const handleScroll = () => {
@@ -133,35 +126,22 @@ export default function Navbar() {
 
           {/* Right Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            {user ? (
-              <motion.button
-                onClick={handleSignOut}
-                className="px-5 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium hover:bg-red-600 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Sign Out
-              </motion.button>
-            ) : (
-              <>
-                <motion.button
-                  onClick={signInWithGoogle}
-                  className={`px-4 py-2 text-sm font-medium ${linkColor}`}
-                  whileHover={{ scale: 1.02 }}
-                >
-                  Sign In
-                </motion.button>
-                <motion.button
-                  onClick={signInWithGoogle}
-                  className="px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
-                  whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(22,163,74,0.3)' }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  Get Started Free
-                  <span>→</span>
-                </motion.button>
-              </>
-            )}
+            <motion.button
+              onClick={signInWithGoogle}
+              className={`px-4 py-2 text-sm font-medium ${linkColor}`}
+              whileHover={{ scale: 1.02 }}
+            >
+              Sign In
+            </motion.button>
+            <motion.button
+              onClick={signInWithGoogle}
+              className="px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
+              whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(22,163,74,0.3)' }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Get Started Free
+              <span>→</span>
+            </motion.button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -193,21 +173,12 @@ export default function Navbar() {
                   {link.label}
                 </button>
               ))}
-              {user ? (
-                <button
-                  onClick={() => { handleSignOut(); setMobileOpen(false); }}
-                  className="mt-4 px-6 py-3 bg-red-500 text-white rounded-xl font-medium"
-                >
-                  Sign Out
-                </button>
-              ) : (
-                <button
+              <button
                   onClick={() => { signInWithGoogle(); setMobileOpen(false); }}
                   className="mt-4 px-6 py-3 bg-green-600 text-white rounded-xl font-medium"
                 >
                   Get Started Free
                 </button>
-              )}
             </nav>
           </motion.div>
         )}

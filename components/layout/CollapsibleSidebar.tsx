@@ -46,13 +46,24 @@ const navItems: NavItem[] = [
   { label: 'Reports', href: '/reports', icon: BarChart3 },
 ]
 
-const COLLAPSED_WIDTH = 64
-const EXPANDED_WIDTH = 240
+const COLLAPSED_WIDTH = 72
+const EXPANDED_WIDTH = 256
+
+const weightedEase = {
+  ease: [0.4, 0, 0.2, 1] as const,
+  duration: 0.4,
+}
 
 const springTransition = {
   type: 'spring' as const,
-  stiffness: 250,
-  damping: 25,
+  stiffness: 300,
+  damping: 30,
+}
+
+const menuItemTransition = {
+  type: 'spring' as const,
+  stiffness: 300,
+  damping: 30,
 }
 
 interface CollapsibleSidebarProps {
@@ -75,22 +86,22 @@ export default function CollapsibleSidebar({ isOpen, onMouseEnter, onMouseLeave 
   const displayName = user?.email?.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Prasad'
 
   return (
-    <div className="fixed left-0 top-0 h-screen z-50">
+    <div className="hidden lg:block fixed left-0 top-0 h-screen z-50">
       {/* Hot zone trigger - 12px invisible area on the left edge */}
       <div
         className="absolute left-0 top-0 h-full w-[12px] -translate-x-full cursor-default"
         onMouseEnter={onMouseEnter}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar - Premium Glassmorphic Tier-1 */}
       <motion.aside
         ref={sidebarRef}
-        className="h-full bg-white/95 backdrop-blur-md border-r border-slate-200 flex flex-col"
+        className="h-full bg-white/70 backdrop-blur-xl border-r border-white/20 flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.08)]"
         initial={false}
         animate={{
           width: isSidebarOpen ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
         }}
-        transition={springTransition}
+        transition={weightedEase}
         onMouseEnter={() => {
           setInternalHover(true)
           onMouseEnter?.()
@@ -102,91 +113,121 @@ export default function CollapsibleSidebar({ isOpen, onMouseEnter, onMouseLeave 
       >
         {/* Logo */}
         <div className="p-4 pb-3">
-          <Link href="/dashboard" className="flex items-center justify-center">
+          <Link href="/dashboard" className="relative flex items-center h-10">
+            {/* Icon container with layout prop for seamless transition */}
             <motion.div
-              initial={{ rotate: -10 }}
-              animate={{ rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+              layout
+              initial={{ rotate: -10, scale: 1.1 }}
+              animate={{ 
+                rotate: 0, 
+                scale: isSidebarOpen ? 1 : 1.1,
+              }}
+              transition={weightedEase}
               className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
             >
               <Leaf className="w-6 h-6 text-white" />
             </motion.div>
-            <AnimatePresence>
-              {isSidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ ...springTransition, delay: 0.1 }}
-                  className="ml-3"
-                >
-                  <h1 className="text-lg font-bold text-zinc-900">AgriMind</h1>
-                  <span className="text-xs text-emerald-600 font-medium">Pro</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            
+            {/* Text wrapper - animated with padding to prevent snap */}
+            <motion.div
+              layout
+              className="absolute left-0 pl-12"
+              animate={{
+                opacity: isSidebarOpen ? 1 : 0,
+                x: isSidebarOpen ? 0 : -8,
+              }}
+              transition={weightedEase}
+            >
+              <div className={isSidebarOpen ? 'opacity-100' : 'opacity-0'}>
+                <h1 className="text-lg font-bold text-zinc-900">AgriMind</h1>
+                <span className="text-xs text-emerald-600 font-medium">Pro</span>
+              </div>
+            </motion.div>
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto">
           <ul className="space-y-0.5">
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
               const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
               const Icon = item.icon
+              const staggerDelay = index * 0.05
 
               return (
                 <li key={item.href}>
                   <Link href={item.href} className="relative block">
                     <motion.div
-                      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
-                        ? 'bg-emerald-50 text-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${isActive
+                        ? 'bg-emerald-50/80 text-emerald-600 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
                         : item.highlight
-                          ? 'text-slate-700 hover:bg-slate-50 hover:text-emerald-600'
-                          : 'text-slate-500 hover:bg-slate-50 hover:text-zinc-900'
+                          ? 'text-slate-700 hover:bg-slate-50/80 hover:text-emerald-600'
+                          : 'text-slate-500 hover:bg-slate-50/80 hover:text-zinc-900'
                         }`}
-                      whileHover={{ x: 2 }}
+                      initial={false}
+                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
+                      transition={menuItemTransition}
                     >
-                      {/* Active indicator bar */}
+                      {/* Floating Active Indicator Pill - Spring Animated */}
                       {isActive && (
                         <motion.div
                           layoutId="activeNav"
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-emerald-600 rounded-r-full"
+                          className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[36px] bg-emerald-100/60 rounded-xl -z-10"
                           transition={springTransition}
                         />
                       )}
-                      <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-emerald-600' : ''}`} />
+                      
+                      {/* Icon - Centered in collapsed, glides left in expanded */}
+                      <motion.div
+                        className="relative flex-shrink-0"
+                        animate={{
+                          x: isSidebarOpen ? 0 : 4,
+                        }}
+                        transition={weightedEase}
+                      >
+                        <motion.div whileHover={{ y: -2 }} transition={menuItemTransition}>
+                          <Icon 
+                            className={`w-5 h-5 transition-all ${isActive ? 'text-emerald-600' : ''}`} 
+                          />
+                        </motion.div>
+                      </motion.div>
+
+                      {/* Staggered Text Entrance */}
                       <AnimatePresence>
                         {isSidebarOpen && (
                           <motion.span
-                            initial={{ opacity: 0, x: -10 }}
+                            initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -10 }}
-                            transition={{ ...springTransition, delay: 0.12 }}
+                            exit={{ opacity: 0, x: 10 }}
+                            transition={{ ...weightedEase, delay: staggerDelay + 0.1 }}
                             className="flex-1 whitespace-nowrap"
                           >
                             {item.label}
                           </motion.span>
                         )}
                       </AnimatePresence>
+
+                      {/* Badge */}
                       {isSidebarOpen && item.badge && (
                         <motion.span
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ ...springTransition, delay: 0.15 }}
+                          transition={{ ...weightedEase, delay: staggerDelay + 0.15 }}
                           className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-md"
                         >
                           {item.badge}
                         </motion.span>
                       )}
+
+                      {/* Chevron */}
                       <AnimatePresence>
                         {isSidebarOpen && (
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: isActive ? 1 : 0.4 }}
                             exit={{ opacity: 0 }}
-                            transition={{ delay: 0.15 }}
+                            transition={{ delay: staggerDelay + 0.15 }}
                           >
                             <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-600' : 'text-slate-300'}`} />
                           </motion.div>
@@ -209,17 +250,19 @@ export default function CollapsibleSidebar({ isOpen, onMouseEnter, onMouseLeave 
         <div className="px-2 py-1">
           <Link href="/settings">
             <motion.div
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-zinc-900 transition-all duration-200"
-              whileHover={{ x: 2 }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50/80 hover:text-zinc-900"
+              whileHover={{ scale: 1.02, x: 2 }}
             >
-              <Settings className="w-5 h-5 flex-shrink-0" />
+              <motion.div whileHover={{ y: -2 }} transition={menuItemTransition}>
+                <Settings className="w-5 h-5 flex-shrink-0" />
+              </motion.div>
               <AnimatePresence>
                 {isSidebarOpen && (
                   <motion.span
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ ...springTransition, delay: 0.12 }}
+                    exit={{ opacity: 0, x: 10 }}
+                    transition={{ ...weightedEase, delay: 0.5 }}
                     className="flex-1 whitespace-nowrap"
                   >
                     Settings
@@ -232,17 +275,17 @@ export default function CollapsibleSidebar({ isOpen, onMouseEnter, onMouseLeave 
 
         {/* User Profile */}
         <div className="p-3 mt-1">
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-all duration-200">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50/80 transition-all duration-200">
             <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.15)]">
               {initials}
             </div>
             <AnimatePresence>
               {isSidebarOpen && (
                 <motion.div
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ ...springTransition, delay: 0.12 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ ...weightedEase, delay: 0.5 }}
                   className="flex-1 min-w-0"
                 >
                   <p className="text-sm font-semibold text-zinc-900 truncate">{displayName}</p>

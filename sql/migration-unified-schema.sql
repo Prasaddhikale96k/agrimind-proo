@@ -112,7 +112,7 @@ CREATE POLICY "Anyone can read profiles" ON profiles FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Users can insert own profiles" ON profiles;
 CREATE POLICY "Users can insert own profiles" ON profiles 
-  FOR INSERT WITH CHECK (auth.uid() = id OR auth.jwt()->>'email' = email);
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 DROP POLICY IF EXISTS "Users can update own profiles" ON profiles;
 CREATE POLICY "Users can update own profiles" ON profiles 
@@ -122,6 +122,10 @@ CREATE POLICY "Users can update own profiles" ON profiles
 DROP POLICY IF EXISTS "Anyone can read farms" ON farms;
 CREATE POLICY "Anyone can read farms" ON farms FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Users can insert own farms" ON farms;
+CREATE POLICY "Users can insert own farms" ON farms 
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
 DROP POLICY IF EXISTS "Users can manage own farms" ON farms;
 CREATE POLICY "Users can manage own farms" ON farms 
   FOR ALL USING (auth.uid() = user_id);
@@ -129,6 +133,10 @@ CREATE POLICY "Users can manage own farms" ON farms
 -- Crops policies
 DROP POLICY IF EXISTS "Anyone can read crops" ON crops;
 CREATE POLICY "Anyone can read crops" ON crops FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Users can insert own crops" ON crops;
+CREATE POLICY "Users can insert own crops" ON crops 
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 DROP POLICY IF EXISTS "Users can manage own crops" ON crops;
 CREATE POLICY "Users can manage own crops" ON crops 

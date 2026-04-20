@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 import {
   Leaf,
@@ -31,7 +30,7 @@ const cropTypes = ['Grain', 'Vegetable', 'Fruit', 'Pulse', 'Oilseed', 'Cash Crop
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, supabase: supabaseClient } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [completed, setCompleted] = useState(false)
@@ -133,7 +132,7 @@ export default function OnboardingPage() {
     setSubmitting(true)
 
     try {
-      const { data: existingPlot } = await supabase
+      const { data: existingPlot } = await supabaseClient
         .from('farms')
         .select('id')
         .eq('plot_id', formData.plotId.toUpperCase())
@@ -146,29 +145,48 @@ export default function OnboardingPage() {
         return
       }
 
-      // Create or update profile
-      const { error: profileError } = await supabase.from('profiles').upsert({
-        id: user.id,  // Use auth user ID
-        full_name: formData.name.trim(),
-        email: user.email,  // Use authenticated email
-        phone: formData.phone.trim(),
-        location: formData.location.trim(),
-        farming_experience: formData.experience,
-        total_land: parseFloat(formData.area),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'id', ignoreDuplicates: false })
+      // Create or update profile - check first if email exists
+      const { data: existingProfile } = await supabaseClient
+        .from('profiles')
+        .select('id, email')
+        .eq('email', user.email)
+        .maybeSingle()
 
-      if (profileError) throw profileError
+      if (existingProfile) {
+        // Profile with this email exists - update it instead
+        await supabaseClient.from('profiles').update({
+          full_name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          location: formData.location.trim(),
+          farming_experience: formData.experience,
+          total_land: parseFloat(formData.area),
+          updated_at: new Date().toISOString(),
+        }).eq('email', user.email)
+      } else {
+        // New profile - create it
+        const { error: profileError } = await supabaseClient.from('profiles').upsert({
+          id: user.id,
+          full_name: formData.name.trim(),
+          email: user.email,
+          phone: formData.phone.trim(),
+          location: formData.location.trim(),
+          farming_experience: formData.experience,
+          total_land: parseFloat(formData.area),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id', ignoreDuplicates: false })
+        if (profileError) throw profileError
+      }
 
       const areaAcres = parseFloat(formData.area)
       const areaSqM = Math.round(areaAcres * 4046.86)
 
-      const { data: farmData, error: farmError } = await supabase
+      const { data: farmData, error: farmError } = await supabaseClient
         .from('farms')
         .insert({
           user_id: user.id,
-          farm_name: formData.farmName.trim(),
+          name: formData.farmName.trim(),
           plot_id: formData.plotId.toUpperCase(),
+          area_sqm: areaSqM,
           area_acres: areaAcres,
           soil_type: formData.soilType,
           water_source: formData.waterSource,
@@ -181,10 +199,10 @@ export default function OnboardingPage() {
       const harvestDate = new Date(formData.sowingDate)
       harvestDate.setMonth(harvestDate.getMonth() + 4)
 
-      const { error: cropError } = await supabase.from('crops').insert({
+      const { error: cropError } = await supabaseClient.from('crops').insert({
         user_id: user.id,
         farm_id: farmData.id,
-        crop_name: formData.cropName.trim(),
+        name: formData.cropName.trim(),
         crop_type: formData.cropType.toLowerCase(),
         variety: formData.variety.trim() || null,
         sowing_date: formData.sowingDate,
@@ -201,7 +219,27 @@ export default function OnboardingPage() {
         router.push('/dashboard')
       }, 2500)
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Something went wrong'
+      console.error('Onboarding error:', error)
+      
+      let message = 'Something went wrong'
+      if (error instanceof Error) {
+        message = error.message
+        
+        // Provide helpful hints for common errors
+        if (message.includes('column') || message.includes('does not exist')) {
+          message = `${message}. Please ensure the database migration has been run in Supabase SQL Editor.`
+        }
+        if (message.includes('row-level security') || message.includes('RLS')) {
+          message = `${message}. Please check RLS policies in Supabase.`
+        }
+      } else if (error && typeof error === 'object') {
+        const err = error as any
+        if (err.message) message = err.message
+        else if (err.details) message = `Details: ${err.details}`
+        else if (err.hint) message = `Hint: ${err.hint}`
+        else message = JSON.stringify(err)
+      }
+      
       toast.error(`Failed to setup your farm: ${message}`)
       console.error('Onboarding error:', error)
     } finally {
