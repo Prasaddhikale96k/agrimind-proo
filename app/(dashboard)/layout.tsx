@@ -13,7 +13,7 @@ const EXPANDED_WIDTH = 240
 const pageTitleMap: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/crops': 'Crop Management',
-  '/cattle': 'Cattle Management',
+  '/livestock-management': 'Cattle Management',
   '/soil': 'Soil Monitoring',
   '/weather': 'Weather Center',
   '/spray': 'Spray Schedule',

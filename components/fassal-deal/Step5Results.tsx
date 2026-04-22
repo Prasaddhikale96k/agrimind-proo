@@ -93,31 +93,28 @@ function DealCard({ deal, index, avgPrice, quantity, location, onSaveSuccess }: 
   }
 
   const handleDirections = () => {
-    const lat = deal.latitude || deal.buyer_lat || 0;
-    const lng = deal.longitude || deal.buyer_lng || 0;
-    
-    let originParam = '';
-    if (location && location.lat && location.lng) {
-      originParam = `&origin=${location.lat},${location.lng}`;
-    }
-    
-    let url = '';
-    const placeId = deal.buyer_place_id;
-    const marketName = encodeURIComponent(deal.buyer_name || 'Market');
-    const marketLocation = deal.buyer_location ? encodeURIComponent(deal.buyer_location) : '';
-    const fullDestination = marketLocation ? `${marketName}, ${marketLocation}` : marketName;
+    // Get market coordinates
+    const marketLat = deal.buyer_lat ?? deal.latitude;
+    const marketLng = deal.buyer_lng ?? deal.longitude;
 
-    if (placeId) {
-      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${fullDestination}&destination_place_id=${placeId}`;
-    } else if (lat && lng) {
-      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${lat},${lng}&destination=${fullDestination}`;
+    if (marketLat && marketLng) {
+      // Method 1: Use exact coordinates (most accurate)
+      // Opens Google Maps from user's current location
+      // to the EXACT market coordinates
+      const url = `https://www.google.com/maps/dir/?api=1` +
+        `&destination=${marketLat},${marketLng}` +
+        `&travelmode=driving`;
+      window.open(url, '_blank');
     } else {
-      url = `https://www.google.com/maps/dir/?api=1${originParam}&destination=${fullDestination}`;
+      // Method 2: Fallback using market name search
+      const marketCity = deal.buyer_district || deal.buyer_location || 'Maharashtra';
+      const query = encodeURIComponent(
+        `${deal.buyer_name} APMC Mandi ${marketCity} India`
+      );
+      const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+      window.open(url, '_blank');
     }
-    
-    console.log("Generated Maps URL:", url);
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
+  };
 
   return (
     <motion.div

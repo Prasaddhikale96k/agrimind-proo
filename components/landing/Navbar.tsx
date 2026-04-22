@@ -59,12 +59,14 @@ export default function Navbar() {
   }
 
   const isAtTop = !isScrolled
-  const navbarBg = isAtTop ? 'bg-transparent' : 'bg-white/70 backdrop-blur-md border-b border-zinc-200/50 shadow-sm'
-  const logoColor = isAtTop ? 'text-zinc-900' : 'text-green-700'
-  const linkColor = isAtTop 
-    ? 'text-zinc-900 hover:text-green-700' 
-    : 'text-gray-600 hover:text-green-600'
-  const linkActiveColor = isAtTop ? 'text-zinc-900' : 'text-green-700'
+  
+  const bgColor = isAtTop 
+    ? 'bg-white/80 backdrop-blur-md' 
+    : 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100'
+  
+  const logoColor = 'text-gray-900'
+  const linkColor = 'text-gray-600 hover:text-emerald-700'
+  const linkActiveColor = 'text-emerald-700'
 
   return (
     <>
@@ -72,84 +74,77 @@ export default function Navbar() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: hideOnScroll ? -80 : 0 }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className={`fixed top-0 left-0 right-0 z-50 h-20 ${navbarBg}`}
+        className={`fixed top-0 left-0 right-0 z-50 ${bgColor}`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          {/* Logo */}
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo - Far Left */}
           <motion.a
             href="#"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-2"
             whileHover={{ scale: 1.02 }}
           >
-            <motion.div
-              whileHover={{ rotate: 15 }}
-              transition={{ type: 'spring', stiffness: 300 }}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-transform duration-300 ${
-                isScrolled ? 'scale-95' : 'scale-100'
-              } ${isScrolled ? 'bg-green-600' : 'bg-green-600'}`}
-            >
-              <Leaf className="w-5 h-5 text-white" />
-            </motion.div>
-            <span className={`text-lg font-bold ${logoColor}`}>AgriMind</span>
-            <span className={`text-xs font-semibold -mt-3 ${linkColor.replace('hover:text-green-700', '')}`}>Pro</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+              <Leaf className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex items-baseline">
+              <span className="text-lg font-bold text-gray-900">AgriMind</span>
+              <span className="text-xs font-semibold text-emerald-600 ml-0.5">Pro</span>
+            </div>
           </motion.a>
 
-          {/* Center Links */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link, i) => (
-              <motion.button
-                key={link.href}
-                onClick={() => scrollTo(link.href)}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
-                className={`relative px-4 py-2 text-sm font-medium rounded-lg ${activeSection === link.href.slice(1) ? linkActiveColor : linkColor}`}
-              >
-                <span className="relative">
+          {/* Center Nav Links - Perfectly Centered with Generous Spacing */}
+          <nav className="hidden lg:flex items-center justify-center absolute left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-8">
+              {navLinks.map((link, i) => (
+                <motion.button
+                  key={link.href}
+                  onClick={() => scrollTo(link.href)}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className={`relative text-sm font-medium py-2 px-1 transition-colors ${
+                    activeSection === link.href.slice(1) ? linkActiveColor : linkColor
+                  }`}
+                >
                   {link.label}
-                  <motion.span
-                    className="absolute left-1/2 -translate-x-1/2 bottom-0 w-0 h-0.5 bg-green-500 rounded-full"
-                    initial={{ width: 0, left: '50%' }}
-                    whileHover={{ width: '80%', left: '10%' }}
-                    transition={{ duration: 0.2 }}
-                  />
-                </span>
-                {activeSection === link.href.slice(1) && (
-                  <motion.div
-                    layoutId="activeNavDot"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-green-500 rounded-full"
-                  />
-                )}
-              </motion.button>
-            ))}
+                  {activeSection === link.href.slice(1) && (
+                    <motion.div
+                      layoutId="activeNavDot"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-500 rounded-full"
+                    />
+                  )}
+                </motion.button>
+              ))}
+            </div>
           </nav>
 
-          {/* Right Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Right Buttons - Sign In + Get Started */}
+          <div className="hidden lg:flex items-center gap-4">
             <motion.button
               onClick={signInWithGoogle}
-              className={`px-4 py-2 text-sm font-medium ${linkColor}`}
+              className="px-1 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Sign In
             </motion.button>
             <motion.button
               onClick={signInWithGoogle}
-              className="px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-medium hover:bg-green-700 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
-              whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(22,163,74,0.3)' }}
+              className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+              whileHover={{ scale: 1.03, boxShadow: '0 10px 25px rgba(5, 150, 105, 0.35)' }}
               whileTap={{ scale: 0.97 }}
             >
               Get Started Free
-              <span>→</span>
+              <span className="text-lg leading-none">→</span>
             </motion.button>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden p-2"
+            className="lg:hidden p-2 -mr-2"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
           </button>
         </div>
       </motion.header>
@@ -163,22 +158,30 @@ export default function Navbar() {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-40 bg-white pt-20 px-6 lg:hidden"
           >
-            <nav className="flex flex-col gap-4">
+            <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
-                  className="text-left text-lg font-medium text-gray-700 hover:text-green-600 py-3 border-b border-gray-100"
+                  className="text-left text-lg font-medium text-gray-700 hover:text-emerald-600 py-4 border-b border-gray-100"
                 >
                   {link.label}
                 </button>
               ))}
-              <button
+              <div className="flex flex-col gap-3 mt-6">
+                <button
                   onClick={() => { signInWithGoogle(); setMobileOpen(false); }}
-                  className="mt-4 px-6 py-3 bg-green-600 text-white rounded-xl font-medium"
+                  className="w-full px-6 py-3 border border-gray-200 text-gray-700 rounded-xl font-medium"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => { signInWithGoogle(); setMobileOpen(false); }}
+                  className="w-full px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium"
                 >
                   Get Started Free
                 </button>
+              </div>
             </nav>
           </motion.div>
         )}

@@ -19,7 +19,6 @@ import {
   Wheat,
   PanelLeftClose,
   PanelLeft,
-  Beef,
   Globe,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -36,7 +35,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Crop Management', href: '/crops', icon: Sprout },
-  { label: 'Cattle', href: '/cattle', icon: Beef },
+  { label: 'Cattle Management', href: '/livestock-management', icon: Leaf },
   { label: 'Fassal Deal', href: '/fassal-deal', icon: Wheat, badge: 'NEW', highlight: true },
   { label: 'KisanGlobal', href: '/kisanglobal', icon: Globe, badge: 'EXPORT', highlight: true },
   { label: 'Weather Center', href: '/weather', icon: CloudSun },

@@ -44,8 +44,17 @@ export function AuthProvider({ children, session: initialSession }: { children: 
 
     const init = async () => {
       if (!initialSession) {
-        const { data: { session: s } } = await supabaseClient.auth.getSession()
-        if (mounted) handleSession(s)
+        try {
+          const { data: { session: s } } = await supabaseClient.auth.getSession()
+          if (mounted) handleSession(s)
+        } catch (error) {
+          console.error('Auth session error:', error)
+          if (mounted) {
+            setLoading(false)
+            setUser(null)
+            setSession(null)
+          }
+        }
       }
     }
 

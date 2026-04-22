@@ -6,6 +6,7 @@ import { fetchWeather, FALLBACK_WEATHER, WeatherData } from '@/lib/weatherServic
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
+import { Farm } from '@/types';
 
 const FARM_METRICS = [
   { id: 'crop-health', icon: '🌿', label: 'Crop Health', value: '85%', numericValue: 85, status: 'Good', statusColor: '#10B981', progressColor: '#10B981' },
@@ -448,7 +449,7 @@ export default function DashboardPage() {
         if (error) throw error;
         
         if (farmsData && farmsData.length > 0) {
-          const mappedPlots = farmsData.map((farm, i) => ({
+          const mappedPlots = (farmsData as Farm[]).map((farm, i) => ({
             id: farm.plot_id || `PL-${i + 1}`,
             name: farm.name,
             plot_name: farm.plot_name || farm.name,

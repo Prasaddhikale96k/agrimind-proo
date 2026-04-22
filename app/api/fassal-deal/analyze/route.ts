@@ -56,9 +56,9 @@ const KNOWN_COORDS: Record<string, { lat: number; lng: number; placeId?: string 
   ahmedabad: { lat: 23.0225, lng: 72.5714 }, bangalore: { lat: 12.9716, lng: 77.5946 },
   indore: { lat: 22.7196, lng: 75.8577 }, jaipur: { lat: 26.9124, lng: 75.7873 },
   amritsar: { lat: 31.634, lng: 74.8723 }, lucknow: { lat: 26.8467, lng: 80.9462 },
-  nagpur: { lat: 21.1458, lng: 79.0882 }, lasalgaon: { lat: 20.0167, lng: 73.9833 },
+  nagpur: { lat: 21.1458, lng: 79.0882 }, lasalgaon: { lat: 20.1167, lng: 74.0833 },
   sangli: { lat: 16.8524, lng: 74.5815 }, kolhapur: { lat: 16.705, lng: 74.2433 },
-  solapur: { lat: 17.6599, lng: 75.9064 }, aurangabad: { lat: 19.8762, lng: 75.3433 },
+  solapur: { lat: 17.6868, lng: 75.9064 }, aurangabad: { lat: 19.8762, lng: 75.3433 },
   jalgaon: { lat: 21.0077, lng: 75.5626 }, ahmednagar: { lat: 19.0948, lng: 74.748 },
   satara: { lat: 17.6805, lng: 74.0183 }, ludhiana: { lat: 30.901, lng: 75.8573 },
   bhopal: { lat: 23.2599, lng: 77.4126 }, surat: { lat: 21.1702, lng: 72.8311 },
@@ -68,12 +68,46 @@ const KNOWN_COORDS: Record<string, { lat: number; lng: number; placeId?: string 
   chennai: { lat: 13.0827, lng: 80.2707 }, kochi: { lat: 9.9312, lng: 76.2673 },
   guntur: { lat: 16.3067, lng: 80.4365 }, hubli: { lat: 15.3647, lng: 75.124 },
   dhule: { lat: 20.9042, lng: 74.7749 }, nanded: { lat: 19.1383, lng: 77.321 },
-  akola: { lat: 20.7002, lng: 77.0082 }, amravati: { lat: 20.932, lng: 77.7523 },
+  akola: { lat: 20.7002, lng: 77.0082 }, amravati: { lat: 20.9374, lng: 77.7796 },
   wardha: { lat: 20.7453, lng: 78.6022 }, chandrapur: { lat: 19.9615, lng: 79.2961 },
   raigad: { lat: 18.5074, lng: 73.056 }, khed: { lat: 19.1833, lng: 73.8167 },
   shrirampur: { lat: 19.6333, lng: 74.4 }, vaduj: { lat: 17.5167, lng: 74.0667 },
   vashi: { lat: 19.0728, lng: 72.9969 }, kamthi: { lat: 21.2333, lng: 79.1833 },
-  amrawati: { lat: 20.932, lng: 77.7523 },
+  amrawati: { lat: 20.9374, lng: 77.7796 },
+  // Maharashtra APMC Markets - exact coordinates from prompt
+  dindori: { lat: 20.2167, lng: 73.8333 },
+  nashik: { lat: 19.9975, lng: 73.7898 },
+  lasalgaon: { lat: 20.1167, lng: 74.0833 },
+  niphad: { lat: 20.0833, lng: 74.1167 },
+  'pimpalgaon baswant': { lat: 20.0833, lng: 74.0500 },
+  pimpalgaon: { lat: 20.0833, lng: 74.0500 },
+  sinnar: { lat: 19.8478, lng: 74.0022 },
+  trimbakeshwar: { lat: 19.9333, lng: 73.5333 },
+  igatpuri: { lat: 19.6939, lng: 73.5603 },
+  chandwad: { lat: 20.3392, lng: 74.2394 },
+  malegaon: { lat: 20.5579, lng: 74.5089 },
+  yeola: { lat: 20.0456, lng: 74.4892 },
+  satana: { lat: 20.5961, lng: 74.2092 },
+  kalwan: { lat: 20.5000, lng: 73.8333 },
+  surgana: { lat: 20.5667, lng: 73.6167 },
+  deola: { lat: 20.4167, lng: 74.2333 },
+  
+  // Far markets
+  pune: { lat: 18.5204, lng: 73.8567 },
+  'pune(khadiki)': { lat: 18.5667, lng: 73.9000 },
+  satara: { lat: 17.6805, lng: 74.0183 },
+  karad: { lat: 17.2880, lng: 74.1836 },
+  solapur: { lat: 17.6868, lng: 75.9064 },
+  kolhapur: { lat: 16.7050, lng: 74.2433 },
+  baramati: { lat: 18.1518, lng: 74.5815 },
+
+  // Other specific
+  hingna: { lat: 21.0069, lng: 78.9710 }, nandurbar: { lat: 21.5374, lng: 74.2424 },
+  gondia: { lat: 21.6914, lng: 80.2185 }, gadchiroli: { lat: 19.7102, lng: 80.2245 },
+  Washim: { lat: 20.1219, lng: 77.0615 },
+  'nashik apmc': { lat: 19.9975, lng: 73.7898 }, 'pune apmc': { lat: 18.5204, lng: 73.8567 },
+  'nagpur apmc': { lat: 21.1458, lng: 79.0882 }, 'vashi apmc': { lat: 19.0728, lng: 72.9969 },
+  'nashik main': { lat: 19.9975, lng: 73.7898 }
 }
 
 function estimateTransportCost(distanceKm: number, quantityQuintals: number): number {
@@ -129,13 +163,31 @@ export async function POST(req: Request) {
     if (mandiData.length > 0) {
       for (const m of mandiData) {
         const key = m.market.toLowerCase().replace(/\s*(mandi|apmc|market|fruit.*veg.*market)\s*/g, '').replace(/[()]/g, '').trim()
-        const coordsEntry = Object.entries(KNOWN_COORDS).find(([k]) => key.includes(k))
-        const lat = coordsEntry?.[1].lat || farmerLat + (Math.random() - 0.5) * 3
-        const lng = coordsEntry?.[1].lng || farmerLng + (Math.random() - 0.5) * 3
+        
+        // First try exact match, then partial match
+        let coordsEntry = Object.entries(KNOWN_COORDS).find(([k]) => key === k);
+        if (!coordsEntry) {
+          coordsEntry = Object.entries(KNOWN_COORDS).find(([k]) => key.includes(k) || k.includes(key));
+        }
+        
+        // Use known coordinates or generate valid coordinates near farmer's location (NOT random)
+        let lat: number, lng: number;
+        if (coordsEntry?.[1]) {
+          lat = coordsEntry[1].lat;
+          lng = coordsEntry[1].lng;
+          console.log(`[analyze] Found coordinates for "${m.market}":`, lat, lng);
+        } else {
+          // Fallback: use farmer's location if no coordinates found
+          lat = farmerLat;
+          lng = farmerLng;
+          console.log(`[analyze] No coordinates for "${m.market}" - using farmer location`);
+        }
         const placeId = coordsEntry?.[1].placeId || undefined;
 
-        const dist = haversineDistance(farmerLat, farmerLng, lat, lng)
-        if (dist > maxDist * 3) continue
+        // If coordinates were found from KNOWN_COORDS, use them. Otherwise, calculate distance as 9999 to filter out unknown coords
+        // rather than incorrectly returning distance 0km
+        const dist = (lat !== farmerLat || lng !== farmerLng) ? haversineDistance(farmerLat, farmerLng, lat, lng) : 9999
+        if (dist > maxDist) continue
 
         const mandiPrice = Math.round(m.modalPrice * gradeMultiplier)
         const transport = estimateTransportCost(dist, quantityQuintals)
@@ -189,7 +241,7 @@ export async function POST(req: Request) {
       const today = new Date().toISOString().split('T')[0]
       for (const m of mandiList) {
         const dist = haversineDistance(farmerLat, farmerLng, m.lat, m.lng)
-        if (dist > maxDist * 3) continue
+        if (dist > maxDist) continue
         const mandiPrice = Math.round(m.price * gradeMultiplier * (0.95 + Math.random() * 0.1))
         const transport = estimateTransportCost(dist, quantityQuintals)
         const weighing = estimateWeighing(quantityQuintals)
@@ -235,6 +287,7 @@ export async function POST(req: Request) {
     const avgPrice = deals.length > 0 ? deals.reduce((s, d) => s + d.price_per_quintal, 0) / deals.length : 1200
     const today = new Date().toISOString().split('T')[0]
     for (const buyer of PRIVATE_BUYERS) {
+      if (buyer.distance > maxDist) continue;
       const price = Math.round(avgPrice * buyer.premium * gradeMultiplier)
       const transport = estimateTransportCost(buyer.distance, quantityQuintals)
       const weighing = estimateWeighing(quantityQuintals)

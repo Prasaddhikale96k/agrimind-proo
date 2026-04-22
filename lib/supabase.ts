@@ -14,6 +14,9 @@ function createSupabaseClient(url: string, key: string, options?: Parameters<typ
     return globalThis.__supabaseClient
   }
 
+  // Custom fetch with extended timeout for slow networks
+  const customFetch = typeof window !== 'undefined' ? window.fetch.bind(window) : undefined;
+
   globalThis.__supabaseClient = createClient(url, key, {
     auth: {
       persistSession: true,
@@ -27,6 +30,12 @@ function createSupabaseClient(url: string, key: string, options?: Parameters<typ
       headers: {
         'x-app-name': 'agrimind-pro',
       },
+      fetch: customFetch,
+    },
+    fetch: customFetch,
+    db: {
+      ...options?.db,
+      timeout: 30000, // Increase timeout to 30s
     },
     ...options,
   })

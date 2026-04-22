@@ -28,34 +28,34 @@ export default function HeroSection() {
   const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.3 })
 
   return (
-    <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-white pt-20">
+    <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-white pt-16">
       {/* Background Gradients */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full" style={{
-          background: 'radial-gradient(ellipse at 20% 20%, rgba(34,197,94,0.12) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)',
         }} />
         <div className="absolute top-0 left-0 w-full h-full" style={{
-          background: 'radial-gradient(ellipse at 80% 80%, rgba(134,239,172,0.15) 0%, transparent 60%)',
+          background: 'radial-gradient(ellipse at 80% 80%, rgba(5, 150, 105, 0.06) 0%, transparent 50%)',
         }} />
-        {/* Grid dots */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+        {/* Subtle grid dots */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="hero-dots" width="40" height="40" patternUnits="userSpaceOnUse">
-              <circle cx="20" cy="20" r="1" fill="#16a34a" />
+              <circle cx="20" cy="20" r="1" fill="#059669" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#hero-dots)" />
         </svg>
       </div>
 
-      {/* Floating Blobs */}
+      {/* Floating Blobs - Subtle organic shapes */}
       <motion.div
-        className="absolute top-20 -left-20 w-[600px] h-[600px] bg-green-200/30 rounded-full blur-3xl"
+        className="absolute top-24 -left-24 w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-3xl"
         animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
       <motion.div
-        className="absolute bottom-20 -right-20 w-[400px] h-[400px] bg-green-300/20 rounded-full blur-2xl"
+        className="absolute bottom-24 -right-24 w-[350px] h-[350px] bg-emerald-200/30 rounded-full blur-2xl"
         animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
         transition={{ duration: 10, repeat: Infinity }}
       />
@@ -82,21 +82,21 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        {/* Badge */}
+        {/* Badge - Centered with breathing room */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, type: 'spring', delay: 0.3 }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-8"
+          className="inline-flex items-center gap-2.5 px-5 py-2.5 bg-emerald-50 border border-emerald-100 rounded-full mb-10 mt-4"
         >
           <motion.span
-            className="w-2 h-2 bg-green-500 rounded-full"
+            className="w-2 h-2 bg-emerald-500 rounded-full"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
-          <span className="text-sm font-medium text-green-700">AI-Powered Farm Management Platform</span>
+          <span className="text-sm font-semibold text-emerald-700 tracking-wide">AI-Powered Farm Management Platform</span>
           <motion.span
-            className="w-2 h-2 bg-green-500 rounded-full"
+            className="w-2 h-2 bg-emerald-500 rounded-full"
             animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
             transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
           />
@@ -132,20 +132,18 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10"
         >
           <motion.button
             onClick={signInWithGoogle}
-            className="relative group px-10 py-5 bg-green-600 text-white rounded-2xl text-lg font-bold overflow-hidden"
-            whileHover={{ scale: 1.05, boxShadow: '0 20px 60px rgba(22,163,74,0.4)' }}
+            className="relative group px-10 py-5 bg-emerald-600 text-white rounded-2xl text-lg font-bold overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+            whileHover={{ scale: 1.03, boxShadow: '0 20px 50px rgba(5, 150, 105, 0.4)' }}
             whileTap={{ scale: 0.97 }}
           >
             {/* Shimmer */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
             </div>
-            {/* Pulse ring */}
-            <span className="absolute inset-0 rounded-2xl border-2 border-green-400 animate-pulse-ring" />
             <span className="relative flex items-center gap-3">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
@@ -159,13 +157,12 @@ export default function HeroSection() {
           </motion.button>
 
           <motion.button
-            className="flex items-center gap-3 px-8 py-5 border-2 border-green-600 text-green-600 rounded-2xl text-lg font-medium hover:bg-green-50 transition-colors"
+            className="flex items-center gap-3 px-8 py-5 border-2 border-emerald-600 text-emerald-700 rounded-2xl text-lg font-medium hover:bg-emerald-50 transition-colors"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <div className="relative">
               <Play className="w-5 h-5 fill-current" />
-              <span className="absolute inset-0 rounded-full border border-green-400 animate-ping" />
             </div>
             Watch Demo
           </motion.button>
@@ -197,16 +194,16 @@ export default function HeroSection() {
             { icon: '💰', value: 40, suffix: '%', label: 'Cost Saved' },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-4">
-              <div className="flex items-center gap-3 px-6 py-4 bg-green-50 border border-green-200 rounded-2xl">
+              <div className="flex items-center gap-3 px-6 py-4 bg-emerald-50/60 border border-emerald-100 rounded-2xl">
                 <span className="text-2xl">{stat.icon}</span>
                 <div>
-                  <p className="text-2xl font-bold text-green-700">
+                  <p className="text-2xl font-bold text-emerald-700">
                     {statsInView && <CountUp end={stat.value} duration={2} suffix={stat.suffix} separator="," />}
                   </p>
                   <p className="text-xs text-gray-500">{stat.label}</p>
                 </div>
               </div>
-              {i < 2 && <div className="w-px h-12 bg-green-200" />}
+              {i < 2 && <div className="w-px h-12 bg-emerald-200/60" />}
             </div>
           ))}
         </motion.div>
@@ -220,7 +217,7 @@ export default function HeroSection() {
           transition={{ duration: 1, delay: 1.5, ease: 'easeOut' }}
           className="relative max-w-4xl mx-auto perspective-[1000px]"
         >
-          <div className="bg-white border border-green-200 rounded-3xl shadow-[0_50px_100px_rgba(22,163,74,0.15)] overflow-hidden">
+          <div className="bg-white border border-emerald-100 rounded-3xl shadow-[0_50px_100px_rgba(5,150,105,0.12)] overflow-hidden">
             {/* Browser Frame */}
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
               <div className="flex gap-1.5">
@@ -235,7 +232,7 @@ export default function HeroSection() {
               </div>
             </div>
             {/* Mini Dashboard Content */}
-            <div className="p-6 bg-green-50/30">
+            <div className="p-6 bg-emerald-50/30">
               <div className="grid grid-cols-4 gap-3 mb-4">
                 {[
                   { label: 'Plant Health', value: '94%', color: 'text-green-600' },
@@ -250,18 +247,18 @@ export default function HeroSection() {
                 ))}
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2 bg-white rounded-xl p-4 border border-green-100">
+                <div className="col-span-2 bg-white rounded-xl p-4 border border-emerald-50">
                   <p className="text-xs font-medium text-gray-700 mb-3">Farm Overview</p>
                   <div className="flex gap-2">
                     {['PL-ODL', 'CL-ODL', 'PL-B'].map((id, i) => (
-                      <div key={i} className="flex-1 bg-green-50 rounded-lg p-2 text-center">
-                        <p className="text-[10px] font-bold text-green-700">{id}</p>
-                        <p className="text-xs text-green-600 font-semibold">{[94, 87, 72][i]}%</p>
+                      <div key={i} className="flex-1 bg-emerald-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] font-bold text-emerald-700">{id}</p>
+                        <p className="text-xs text-emerald-600 font-semibold">{[94, 87, 72][i]}%</p>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="bg-white rounded-xl p-4 border border-green-100">
+                <div className="bg-white rounded-xl p-4 border border-emerald-50">
                   <p className="text-xs font-medium text-gray-700 mb-3">Weather</p>
                   <p className="text-2xl mb-1">☀️</p>
                   <p className="text-lg font-bold text-gray-900">32°C</p>
@@ -273,7 +270,7 @@ export default function HeroSection() {
 
           {/* Floating Cards around mockup */}
           <motion.div
-            className="absolute -left-16 top-1/4 bg-white rounded-xl p-3 shadow-lg border border-green-100 hidden lg:block"
+            className="absolute -left-16 top-1/4 bg-white rounded-xl p-3 shadow-lg border border-emerald-100 hidden lg:block"
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
@@ -282,7 +279,7 @@ export default function HeroSection() {
           </motion.div>
 
           <motion.div
-            className="absolute -right-16 top-1/3 bg-white rounded-xl p-3 shadow-lg border border-green-100 hidden lg:block"
+            className="absolute -right-16 top-1/3 bg-white rounded-xl p-3 shadow-lg border border-emerald-100 hidden lg:block"
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 5, repeat: Infinity, delay: 1 }}
           >
@@ -291,11 +288,11 @@ export default function HeroSection() {
           </motion.div>
 
           <motion.div
-            className="absolute -left-12 bottom-8 bg-white rounded-xl p-3 shadow-lg border border-green-100 hidden lg:block"
+            className="absolute -left-12 bottom-8 bg-white rounded-xl p-3 shadow-lg border border-emerald-100 hidden lg:block"
             animate={{ y: [0, -12, 0] }}
             transition={{ duration: 3.5, repeat: Infinity, delay: 0.5 }}
           >
-            <p className="text-xs font-bold text-green-600">₹1,56,000</p>
+            <p className="text-xs font-bold text-emerald-600">₹1,56,000</p>
             <p className="text-[10px] text-gray-500">Net Profit ↑32%</p>
           </motion.div>
         </motion.div>

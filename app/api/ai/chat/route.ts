@@ -7,13 +7,20 @@ const WEATHER_API_KEY = 'df1a9b4cb1050c130817ebc84aa2e2aa'
 
 const groq = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
-  apiKey: process.env.GROQ_API_KEY || '',
+  apiKey: process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '',
 })
 
 async function fetchRealtimeWeather(location: string) {
   try {
-    const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)},India&appid=${WEATHER_API_KEY}&units=metric`
-    const response = await fetch(url)
+    let url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(location)},India&appid=${WEATHER_API_KEY}&units=metric`
+    let response = await fetch(url)
+    
+    if (!response.ok) {
+      console.log(`Weather fetch failed for ${location}, falling back to Nashik`)
+      url = `https://api.openweathermap.org/data/2.5/weather?q=Nashik,India&appid=${WEATHER_API_KEY}&units=metric`
+      response = await fetch(url)
+    }
+    
     if (!response.ok) return null
     const data = await response.json()
     return {
@@ -39,7 +46,7 @@ async function fetchRealtimeWeather(location: string) {
 
 async function callGemini(messages: any[]) {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
   const systemPrompt = messages.find((m: any) => m.role === 'system')?.content || ''
   const chatMessages = messages.filter((m: any) => m.role !== 'system')

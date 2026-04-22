@@ -49,30 +49,30 @@ export default function CropsPage() {
     loadData()
   }, [user])
 
-  async function loadData() {
+async function loadData() {
     if (!user) return
 
     try {
       setLoading(true)
 
       // Get user's farms
-      const { data: farmsData, error: farmsError } = await supabase
-        .from('farms')
-        .select('*')
-        .eq('user_id', user.id)
+       const { data: farmsData, error: farmsError } = await supabase
+         .from('farms')
+         .select('*')
+         .eq('user_id', user.id) as { data: Farm[] | null; error: Error | null }
 
       if (farmsError) throw farmsError
       setFarms(farmsData || [])
 
       if (farmsData && farmsData.length > 0) {
-        const farmIds = farmsData.map(f => f.id)
+        const farmIds = farmsData.map((f: Farm) => f.id)
 
         // Get crops for user's farms
-        const { data: cropsData, error: cropsError } = await supabase
-          .from('crops')
-          .select('*')
-          .in('farm_id', farmIds)
-          .order('created_at', { ascending: false })
+         const { data: cropsData, error: cropsError } = await supabase
+           .from('crops')
+           .select('*')
+           .in('farm_id', farmIds)
+           .order('created_at', { ascending: false }) as { data: Crop[] | null; error: Error | null }
 
         if (cropsError) throw cropsError
         setCrops(cropsData || [])
@@ -426,7 +426,7 @@ function AddCropModal({
     setSubmitting(true)
 
     try {
-      const { error } = await supabase.from('crops').insert({
+      const cropData = {
         farm_id: farmId,
         name: formData.name.trim(),
         variety: formData.variety.trim() || null,
@@ -441,7 +441,8 @@ function AddCropModal({
         status: 'growing',
         health_index: 85,
         growth_stage: 'Germination',
-      })
+      }
+      const { error } = await supabase.from('crops').insert(cropData as any)
 
       if (error) throw error
 
